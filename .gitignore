@@ -1,0 +1,31 @@
+# Gradle
+.gradle/
+.kotlin/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IntelliJ / Android Studio
+.idea/
+*.iml
+.cxx/
+captures/
+
+# Local config (contains absolute SDK path)
+local.properties
+
+# Keystore
+*.jks
+*.keystore
+keystore.properties
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Screenshots from ad-hoc captures (commit polished ones only under docs/)
+/SpamBlocker/launch_screenshot.png
+/SpamBlocker/screenshot*.png

@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">선거 스팸 차단</string>
+    <string name="notification_listener_label">선거 스팸 알림 감시</string>
+
+    <string name="header_status">차단 상태</string>
+    <string name="enabled">차단 활성화</string>
+    <string name="disabled">차단 일시정지</string>
+    <string name="total_blocked">지금까지 차단 %1$d건</string>
+
+    <string name="header_permissions">권한</string>
+    <string name="perm_notification_listener">알림 접근 권한</string>
+    <string name="perm_notification_listener_desc">메시지 앱의 알림을 읽고 스팸이면 즉시 숨깁니다.</string>
+    <string name="perm_call_screening">통화 차단 권한</string>
+    <string name="perm_call_screening_desc">선거 스팸으로 의심되는 번호의 전화를 자동으로 거절합니다.</string>
+    <string name="grant">권한 허용</string>
+    <string name="granted">허용됨</string>
+
+    <string name="header_keywords">차단 키워드</string>
+    <string name="keywords_hint">한 줄에 하나씩 입력하세요</string>
+    <string name="save">저장</string>
+    <string name="reset_defaults">기본값으로 되돌리기</string>
+
+    <string name="header_log">최근 차단 내역</string>
+    <string name="empty_log">아직 차단된 항목이 없습니다.</string>
+    <string name="clear_log">기록 지우기</string>
+</resources>
