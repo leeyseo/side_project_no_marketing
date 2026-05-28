@@ -13,11 +13,4 @@ object DefaultRules {
         "국민의힘", "더불어민주당", "정의당", "개혁신당", "진보당", "조국혁신당",
         "녹색정의당", "새로운미래", "기본소득당",
     )
-
-    val senderPatterns: List<Regex> = listOf(
-        Regex("^15\\d{6}$"),
-        Regex("^16\\d{6}$"),
-        Regex("^18\\d{6}$"),
-        Regex("^050\\d{8,9}$"),
-    )
 }

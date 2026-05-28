@@ -10,8 +10,6 @@
     <string name="header_permissions">권한</string>
     <string name="perm_notification_listener">알림 접근 권한</string>
     <string name="perm_notification_listener_desc">메시지 앱의 알림을 읽고 스팸이면 즉시 숨깁니다.</string>
-    <string name="perm_call_screening">통화 차단 권한</string>
-    <string name="perm_call_screening_desc">선거 스팸으로 의심되는 번호의 전화를 자동으로 거절합니다.</string>
     <string name="grant">권한 허용</string>
     <string name="granted">허용됨</string>
 

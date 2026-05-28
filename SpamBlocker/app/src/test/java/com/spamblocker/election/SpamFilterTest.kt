@@ -11,7 +11,6 @@ class SpamFilterTest {
 
     private fun newFilter(whitelist: Set<String> = emptySet()) = SpamFilter(
         keywords = DefaultRules.keywords,
-        senderPatterns = DefaultRules.senderPatterns,
         whitelistNumbers = whitelist,
     )
 
@@ -39,16 +38,6 @@ class SpamFilterTest {
             sender = "010-0000-0000",
             body = "사전투표 같이 가자",
         )
-        assertFalse(d.isSpam)
-    }
-
-    @Test fun call_blocked_by_sender_pattern() {
-        val d = newFilter().classifyCall("1644-1234")
-        assertTrue(d.isSpam)
-    }
-
-    @Test fun mobile_call_not_blocked_by_pattern() {
-        val d = newFilter().classifyCall("010-1234-5678")
         assertFalse(d.isSpam)
     }
 

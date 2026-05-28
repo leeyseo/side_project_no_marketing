@@ -1,10 +1,8 @@
 package com.spamblocker.election
 
-import android.app.role.RoleManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
@@ -65,14 +63,12 @@ fun SpamBlockerScreen(modifier: Modifier = Modifier) {
     var enabled by remember { mutableStateOf(store.enabled) }
     var blockedCount by remember { mutableIntStateOf(store.blockedCount) }
     var notificationGranted by remember { mutableStateOf(hasNotificationAccess(context)) }
-    var callScreeningGranted by remember { mutableStateOf(hasCallScreeningRole(context)) }
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 notificationGranted = hasNotificationAccess(context)
-                callScreeningGranted = hasCallScreeningRole(context)
                 blockedCount = store.blockedCount
             }
         }
@@ -100,9 +96,7 @@ fun SpamBlockerScreen(modifier: Modifier = Modifier) {
 
         PermissionsCard(
             notificationGranted = notificationGranted,
-            callScreeningGranted = callScreeningGranted,
             onRequestNotification = { openNotificationListenerSettings(context) },
-            onRequestCallScreening = { requestCallScreeningRole(context) },
         )
 
         KeywordsCard(
@@ -159,9 +153,7 @@ private fun StatusCard(
 @Composable
 private fun PermissionsCard(
     notificationGranted: Boolean,
-    callScreeningGranted: Boolean,
     onRequestNotification: () -> Unit,
-    onRequestCallScreening: () -> Unit,
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
@@ -173,13 +165,6 @@ private fun PermissionsCard(
                 desc = stringRes(R.string.perm_notification_listener_desc),
                 granted = notificationGranted,
                 onClick = onRequestNotification,
-            )
-            Spacer(Modifier.height(12.dp))
-            PermissionRow(
-                title = stringRes(R.string.perm_call_screening),
-                desc = stringRes(R.string.perm_call_screening_desc),
-                granted = callScreeningGranted,
-                onClick = onRequestCallScreening,
             )
         }
     }
@@ -308,21 +293,6 @@ private fun hasNotificationAccess(context: Context): Boolean {
 
 private fun openNotificationListenerSettings(context: Context) {
     val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
-        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    }
-    context.startActivity(intent)
-}
-
-private fun hasCallScreeningRole(context: Context): Boolean {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false
-    val rm = context.getSystemService(RoleManager::class.java) ?: return false
-    return rm.isRoleHeld(RoleManager.ROLE_CALL_SCREENING)
-}
-
-private fun requestCallScreeningRole(context: Context) {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
-    val rm = context.getSystemService(RoleManager::class.java) ?: return
-    val intent = rm.createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING).apply {
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
     context.startActivity(intent)

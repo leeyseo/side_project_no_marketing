@@ -1,11 +1,12 @@
 # 선거 스팸 차단 (SpamBlocker)
 
-선거철에 쏟아지는 후보자 홍보 메시지와 여론조사 ARS 전화를 자동으로 차단하는 안드로이드 앱.
+선거철에 쏟아지는 후보자 홍보 문자와 여론조사 메시지 알림을 자동으로 숨기는 안드로이드 앱.
 
 - **알림 차단**: 메시지 앱의 스팸 알림을 즉시 숨김 (저장은 그대로, 알림만 안 뜸)
-- **통화 차단**: 정치권 대표번호 패턴의 전화를 무음 거절
-- **온디바이스**: 키워드/번호 패턴 매칭이 모두 폰 안에서 처리, 외부 서버 없음
+- **온디바이스**: 키워드 매칭이 모두 폰 안에서 처리, 외부 서버 없음
 - **사용자 편집 가능**: 차단 키워드와 화이트리스트는 앱에서 직접 수정
+
+> **현재 범위: 문자(SMS) 알림 차단 전용.** 통화 차단은 번호만으로 여론조사·선거 전화를 구분할 수 없어(15xx/16xx 대역은 은행·택배 등 정상 기업도 사용) 오탐 위험이 커서 제외했습니다. 통화는 사용자 거절 패턴을 학습하는 방식으로 차후(v2) 재검토 예정.
 
 ---
 
@@ -25,25 +26,10 @@
 - 메시지 자체는 삭제하지 않음 (정책상 기본 SMS 앱이 아니면 불가능)
 - 알림이 잠깐 떴다가 사라지는 게 아니라, 시스템이 알림을 등록하는 동시에 가로채서 사용자 인지 전에 제거
 
-### 2. 통화 차단 — `CallScreeningService`
-Android 10 (API 29) 이상의 `RoleManager.ROLE_CALL_SCREENING` 역할을 부여받아, 수신 전화가 울리기 전에 발신번호를 검사합니다.
-
-```kotlin
-CallResponse.Builder()
-    .setDisallowCall(true)
-    .setRejectCall(true)
-    .setSilenceCall(true)
-    .setSkipNotification(true)
-    .build()
-```
-
-차단 시 벨소리·진동·놓친전화 알림 모두 발생하지 않음. 통화 기록(call log)에는 남겨서 사용자가 나중에 확인 가능.
-
-### 3. 필터 엔진
+### 2. 필터 엔진
 순수 Kotlin 라이브러리, Android 프레임워크 의존성 없음. 유닛 테스트로 검증.
 
 - **키워드 매칭**: 발신자명 + 본문을 lowercase 후 부분 문자열 검사
-- **번호 패턴 매칭**: 정규식 (한국 정치권 대표번호 대역 `15XX-XXXX`, `16XX-XXXX`, `18XX-XXXX`, `050X-XXXX-XXXX`)
 - **화이트리스트**: 등록된 번호는 키워드와 무관하게 통과
 
 ---
@@ -77,12 +63,9 @@ SpamBlocker/
     │   ├── SettingsStore.kt                     # 키워드, 화이트리스트, 카운터
     │   └── BlockLog.kt                          # 차단 내역 (StateFlow)
     ├── service/
-    │   ├── SpamNotificationListenerService.kt   # 알림 가로채기
-    │   └── SpamCallScreeningService.kt          # 통화 차단
+    │   └── SpamNotificationListenerService.kt   # 알림 가로채기
     └── ui/theme/                                # Material3 테마
 ```
-
-총 10개 파일, 약 600 줄.
 
 ---
 
@@ -114,15 +97,13 @@ $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
 
 ## 권한 부여 방법
 
-앱 실행 후 두 가지 특수 권한을 사용자가 직접 시스템 설정에서 부여해야 합니다.
+앱 실행 후 알림 접근 권한을 사용자가 직접 시스템 설정에서 부여해야 합니다.
 
 1. **알림 접근 권한** — 앱 내 "권한 허용" 버튼 → 시스템 설정 → "SpamBlocker" 토글 ON
-2. **통화 차단 역할** — 앱 내 "권한 허용" 버튼 → 다이얼로그에서 "예" 선택
 
 에뮬레이터에서 자동 부여 (테스트용):
 ```powershell
 & $adb shell cmd notification allow_listener com.spamblocker.election/com.spamblocker.election.service.SpamNotificationListenerService
-& $adb shell cmd role add-role-holder android.app.role.CALL_SCREENING com.spamblocker.election
 ```
 
 ---
@@ -130,18 +111,14 @@ $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
 ## 검증 현황
 
 ### 자동 테스트
-- 유닛 테스트 **9/9 통과** (`SpamFilterTest`)
-  - 키워드/발신번호 매칭, 화이트리스트 우회, null safety, 정당명 매칭 등
+- 유닛 테스트 통과 (`SpamFilterTest`, `RealWorldSpamTest`)
+  - 키워드 매칭, 화이트리스트 우회, null safety, 정당명 매칭
+  - 실제 받는 형태의 선거 문자 5건 차단 / 정상 문자(가족·병원·택배) 3건 통과 검증
 
 ### 수동 검증 (에뮬레이터 Pixel 7 API 36)
 - 빌드: `assembleDebug` BUILD SUCCESSFUL
 - 설치: 정상
-- UI 렌더링: Compose 4개 카드 모두 정상, 한글 폰트 OK
-- **실제 통화 차단**: 에뮬레이터 GSM 시뮬레이션으로 `1588-1234` 발신 → CallScreeningService 인터셉트 → 무음 거절 → 카운터 0→1 증가 → 차단 로그 표시까지 end-to-end 확인
-
-```
-05-27 14:53:12.063 SpamCS: Blocking call from 15881234 reason=발신패턴: ^15\d{6}$
-```
+- UI 렌더링: Compose 카드 모두 정상, 한글 폰트 OK
 
 ### 아직 검증 안 한 항목
 - 실기기 SMS 알림 차단 (에뮬레이터에서 임의 SMS 발신이 어려움)
@@ -152,17 +129,15 @@ $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
 ## 로드맵
 
 ### 완료
-- [x] 필터 엔진 + 기본 키워드 30개
+- [x] 필터 엔진 + 기본 키워드 30개 (키워드 매칭 전용)
 - [x] SettingsStore (SharedPreferences)
 - [x] BlockLog (최근 200건)
 - [x] NotificationListenerService
-- [x] CallScreeningService
 - [x] Compose UI (상태/권한/키워드/로그 4개 카드)
-- [x] 유닛 테스트
-- [x] 에뮬레이터 end-to-end 검증
+- [x] 유닛 테스트 (실제 선거 문자 샘플 포함)
 
 ### 출시 전 필수
-- [ ] **앱 아이콘 디자인** — 현재 기본 안드로이드 아이콘
+- [x] **앱 아이콘 디자인** — 보라색 배경 + 흰 방패에 차단(⊘) 기호 (adaptive icon 벡터)
 - [ ] **실기기 테스트** — 본인 폰에 sideload 설치, 실제 선거 스팸으로 검증
 - [ ] **개인정보 처리방침** — 정적 페이지 (외부 서버 없으니 매우 간단)
 - [ ] **릴리즈 서명키 생성** — `keystore.jks` + `signingConfigs.release`
@@ -170,6 +145,8 @@ $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
 - [ ] **Play Console 등록** — 앱 설명, 스크린샷 8장, 콘텐츠 등급 설문, 카테고리 (Tools)
 
 ### 출시 후 개선 후보
+- [ ] **통화 차단 v2 (학습형)** — 통화이력(`READ_CALL_LOG`)에서 사용자가 최근 반복 거절한 비-010 번호를 학습해 차단. 번호 대역 일괄 차단의 오탐 문제를 행동 기반으로 해결 (단, Play의 통화기록 권한 정책 검토 필요)
+- [ ] 문자 온디바이스 ML 분류기 — 키워드를 못 피한 스팸/오탐을 실사용 데이터로 학습 (소형 분류기 우선, 풀 LLM은 알림 타이밍상 부담)
 - [ ] iOS 버전 (Mac 환경 확보 시)
 - [ ] 실시간 차단 통계 시각화 (차트)
 - [ ] 사용자 정의 정규식 패턴 지원
@@ -194,7 +171,7 @@ $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
 - [ ] 데이터 보안 양식 — "수집/공유 없음"
 - [ ] 카테고리 — "도구" 또는 "통신"
 - [ ] 대상 연령 — 만 13세 이상
-- [ ] 카메라/위치/연락처 권한 — `READ_CONTACTS` 사용 시 사용 목적 명시 (현재 manifest에 선언만 되어있고 미사용, 제거 고려)
+- [x] 카메라/위치/연락처 권한 — 미사용 `READ_CONTACTS` 선언 제거 완료. 현재 권한은 `POST_NOTIFICATIONS`만 사용
 
 ---
 

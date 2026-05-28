@@ -1,6 +1,7 @@
 package com.spamblocker.election.service
 
 import android.app.Notification
+import android.content.ComponentName
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
@@ -49,6 +50,11 @@ class SpamNotificationListenerService : NotificationListenerService() {
 
     override fun onListenerConnected() {
         Log.i(TAG, "Notification listener connected")
+    }
+
+    override fun onListenerDisconnected() {
+        Log.w(TAG, "Notification listener disconnected, requesting rebind")
+        requestRebind(ComponentName(this, SpamNotificationListenerService::class.java))
     }
 
     companion object {

@@ -35,7 +35,6 @@ class SettingsStore private constructor(private val prefs: SharedPreferences) {
 
     fun buildFilter(): SpamFilter = SpamFilter(
         keywords = keywords,
-        senderPatterns = DefaultRules.senderPatterns,
         whitelistNumbers = whitelist,
     )
 
